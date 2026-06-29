@@ -1,0 +1,85 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.mygolbs.mybus'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.mygolbs.mybus'
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName '1.0.0'
+
+        // ==================== API Keys ====================
+
+        // 高德地图 Web 服务 API Key
+        // 如需更换：前往 https://lbs.amap.com/ 注册 → 应用管理 → 创建新应用
+        // 注意：此 Key 用于 Web 服务 API（公交查询），不是 Android SDK Key
+        buildConfigField 'String', 'AMAP_KEY', '"45bf007bbf84b9982e721aa5bd259b1f"'
+
+        // 掌上公交后端 API 基地址（待 Frida 动态抓包后替换）
+        // 原 APP 绑梆加固，首次运行需 Frida 抓取真实 API 路径
+        buildConfigField 'String', 'BUS_API_BASE', '"http://117.40.140.76:8084/hctsm-server/"'
+
+        // 高德地图 API 基地址（当前在用）
+        buildConfigField 'String', 'AMAP_API_BASE', '"https://restapi.amap.com/v3/"'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+}
+
+dependencies {
+    // AndroidX
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    // 高德地图
+    implementation 'com.amap.api:map2d:6.0.0'
+    implementation 'com.amap.api:location:6.0.0'
+    implementation 'com.amap.api:search:7.1.0'
+
+    // 网络请求
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // 图片加载
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+
+    // 生命周期
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
+}

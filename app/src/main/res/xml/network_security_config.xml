@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 允许访问原始掌上公交 API（国内服务器，仅 HTTP） -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">117.40.140.76</domain>
+        <domain includeSubdomains="true">mygolbs.com</domain>
+    </domain-config>
+
+    <!-- 高德地图 API（HTTPS，信任系统证书） -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">restapi.amap.com</domain>
+        <domain includeSubdomains="true">amap.com</domain>
+        <domain includeSubdomains="true">lbs.amap.com</domain>
+    </domain-config>
+
+    <!-- 默认：允许所有 HTTPS，debug 可抓包 -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <!-- debug 模式下信任用户证书，方便 Charles/Fiddler 抓包 -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
