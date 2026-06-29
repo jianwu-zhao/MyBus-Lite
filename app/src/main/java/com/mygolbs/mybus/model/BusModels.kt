@@ -1,6 +1,7 @@
 package com.mygolbs.mybus.model
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 /**
  * 数据模型 - 与掌上公交后端 API 对应
@@ -30,7 +31,7 @@ data class BusLine(
     @SerializedName("distance") val distance: String = "",
     @SerializedName("company") val company: String = "",
     @SerializedName("direction") val direction: Int = 0
-)
+) : Serializable
 
 /** 站点 */
 data class Station(

@@ -40,7 +40,12 @@ class LineDetailActivity : AppCompatActivity() {
         binding = ActivityLineDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        line = intent.getSerializableExtra("line") as? BusLine ?: run {
+        line = if (android.os.Build.VERSION.SDK_INT >= 33) {
+            intent.getSerializableExtra("line", BusLine::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getSerializableExtra("line") as? BusLine
+        } ?: run {
             Toast.makeText(this, "数据错误", Toast.LENGTH_SHORT).show()
             finish()
             return
@@ -140,19 +145,19 @@ class LineDetailActivity : AppCompatActivity() {
             // 两个方向都有数据，显示两个 Tab
             binding.tabDirs.getTabAt(0)?.text = "上行（${upStations.size}站）"
             binding.tabDirs.getTabAt(1)?.text = "下行（${downStations.size}站）"
-            binding.tabDirs.visibility = android.view.View.VISIBLE
+            binding.tabDirs.visibility = View.VISIBLE
         } else if (upStations.isNotEmpty()) {
             // 只有一个方向
             binding.tabDirs.getTabAt(0)?.text = "站点列表（${upStations.size}站）"
-            binding.tabDirs.getTabAt(1)?.visibility = android.view.View.GONE
-            binding.tabDirs.visibility = android.view.View.VISIBLE
+            binding.tabDirs.getTabAt(1)?.view?.visibility = View.GONE
+            binding.tabDirs.visibility = View.VISIBLE
         } else if (downStations.isNotEmpty()) {
             binding.tabDirs.getTabAt(0)?.text = "站点列表（${downStations.size}站）"
-            binding.tabDirs.getTabAt(1)?.visibility = android.view.View.GONE
-            binding.tabDirs.visibility = android.view.View.VISIBLE
+            binding.tabDirs.getTabAt(1)?.view?.visibility = View.GONE
+            binding.tabDirs.visibility = View.VISIBLE
         } else {
             // 无站点数据
-            binding.tabDirs.visibility = android.view.View.GONE
+            binding.tabDirs.visibility = View.GONE
             Toast.makeText(this, "未获取到站点信息", Toast.LENGTH_SHORT).show()
         }
     }
