@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
 
     companion object {
-        private const val URL = "http://m.mygolbs.com"
+        private const val URL = "https://www.chelaile.net.cn"
     }
 
     @SuppressLint("SetJavaScriptEnabled")
