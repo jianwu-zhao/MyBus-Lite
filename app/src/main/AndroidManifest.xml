@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
         android:allowBackup="false"
@@ -15,33 +14,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyBus"
-        android:networkSecurityConfig="@xml/network_security_config">
-
-        <meta-data
-            android:name="com.amap.api.v2.apikey"
-            android:value="@string/amap_key" />
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".CitySelectActivity"
-            android:theme="@style/Theme.MyBus.Dialog" />
-
-        <activity
-            android:name=".LineDetailActivity"
-            android:parentActivityName=".MainActivity" />
-
-        <activity
-            android:name=".RoutePlanActivity"
-            android:parentActivityName=".MainActivity" />
-
     </application>
 </manifest>
