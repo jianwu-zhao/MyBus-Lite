@@ -1,5 +1,5 @@
 plugins {
-    id('com.android.application')
+    id 'com.android.application'
 }
 android {
     namespace 'com.mybus.lite'
@@ -8,7 +8,10 @@ android {
         applicationId 'com.mybus.lite'
         minSdk 21
         targetSdk 33
-        versionCode 3
-        versionName '1.3'
+        versionCode 4
+        versionName '1.4'
     }
+}
+dependencies {
+    implementation 'org.json:json:20230227'
 }
