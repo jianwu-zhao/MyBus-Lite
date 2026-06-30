@@ -3,8 +3,6 @@ package com.mybus.lite;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -12,89 +10,101 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
-    private EditText cityCodeInput;
-    private EditText lineNameInput;
+    private EditText cityInput;
+    private EditText lineInput;
     private TextView resultView;
-    private Button searchButton;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        int dp = (int)(14 * getResources().getDisplayMetrics().density + 0.5f);
         LinearLayout root = new LinearLayout(this);
+        root.setPadding(dp, dp, dp, dp);
         root.setOrientation(LinearLayout.VERTICAL);
-        int p = (int)(14 * getResources().getDisplayMetrics().density + 0.5f);
-        root.setPadding(p, p, p, p);
         
-        cityCodeInput = new EditText(this);
-        cityCodeInput.setHint("城市代码，如武汉=02700");
-        cityCodeInput.setText("02700");
-        root.addView(cityCodeInput, new LinearLayout.LayoutParams(-1, -2));
+        TextView title = new TextView(this);
+        title.setText("掌上公交实时查询");
+        title.setTextSize(18);
+        root.addView(title, new LinearLayout.LayoutParams(-1, -2));
         
-        lineNameInput = new EditText(this);
-        lineNameInput.setHint("线路名，如5路");
-        lineNameInput.setText("5路");
-        root.addView(lineNameInput, new LinearLayout.LayoutParams(-1, -2));
+        cityInput = new EditText(this);
+        cityInput.setHint("城市代码 如:02700 福州=0591 简阳=02805");
+        cityInput.setText("02700");
+        root.addView(cityInput, new LinearLayout.LayoutParams(-1, -2));
         
-        searchButton = new Button(this);
-        searchButton.setText("查线路");
-        root.addView(searchButton, new LinearLayout.LayoutParams(-1, -2));
+        lineInput = new EditText(this);
+        lineInput.setHint("线路名/关键词");
+        lineInput.setText("5路");
+        root.addView(lineInput, new LinearLayout.LayoutParams(-1, -2));
         
+        Button btn = new Button(this);
+        btn.setText("查询");
+        root.addView(btn, new LinearLayout.LayoutParams(-1, -2));
+        
+        ScrollView sv = new ScrollView(this);
         resultView = new TextView(this);
         resultView.setTextSize(12);
-        root.addView(resultView, new LinearLayout.LayoutParams(-1, 0, 1));
+        sv.addView(resultView, new ScrollView.LayoutParams(-1, -2));
+        root.addView(sv, new LinearLayout.LayoutParams(-1, 0, 1));
         
-        searchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new Thread(() -> {
-                    try {
-                        String result = query();
-                        runOnUiThread(() -> resultView.setText(result));
-                    } catch (Exception e) {
-                        runOnUiThread(() -> resultView.setText("错误: " + e));
-                    }
-                }).start();
+        btn.setOnClickListener(v -> new Thread(() -> {
+            try {
+                String city = cityInput.getText().toString().trim();
+                String kw = lineInput.getText().toString().trim();
+                String out = query(city, kw);
+                runOnUiThread(() -> resultView.setText(out));
+            } catch (Exception e) {
+                runOnUiThread(() -> resultView.setText("错误: " + e));
             }
-        });
+        }).start());
         
         setContentView(root);
     }
     
-    private String query() throws Exception {
-        String cityCode = cityCodeInput.getText().toString().trim();
-        String lineName = lineNameInput.getText().toString().trim();
+    private String query(String city, String keyword) throws Exception {
+        StringBuilder out = new StringBuilder();
+        // 1. 查线路列表
+        out.append("=== 线路列表 ===\n");
+        out.append(fetchLines(city));
+        // 2. 过滤
+        if (keyword != null && !keyword.isEmpty()) {
+            out.append("\n\n=== 搜索结果 ===\n");
+            String raw = fetchLines(city);
+            String[] lines = raw.replace("},{", "\n}\n{").split("\n");
+            for (String line : lines) {
+                if (line.contains(keyword)) {
+                    out.append(line).append("\n");
+                }
+            }
+        }
+        return out.toString();
+    }
+    
+    private String fetchLines(String city) throws Exception {
         String url = "http://quanguo.mygolbs.com:8081/Lostfound/GetLineServlet";
-        String post = "cityCode=" + URLEncoder.encode(cityCode, "UTF-8");
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setRequestMethod("POST");
         c.setDoOutput(true);
         c.setConnectTimeout(15000);
         c.setReadTimeout(15000);
-        c.setRequestProperty("User-Agent", "Mozilla/5.0 MyBus-Lite/1.0");
         c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        c.getOutputStream().write(post.getBytes("UTF-8"));
-        c.getOutputStream().close();
+        OutputStream os = c.getOutputStream();
+        os.write(("cityCode=" + URLEncoder.encode(city, "UTF-8")).getBytes());
+        os.close();
         int code = c.getResponseCode();
         BufferedReader r = new BufferedReader(new InputStreamReader(
                 code >= 200 && code < 400 ? c.getInputStream() : c.getErrorStream(), "UTF-8"));
-        StringBuilder sb = new StringBuilder();
         String line;
-        while ((line = r.readLine()) != null) sb.append(line);
+        StringBuilder sb = new StringBuilder();
+        while ((line = r.readLine()) != null) sb.append(line).append('\n');
         r.close();
         c.disconnect();
-        String raw = sb.toString();
-        return format(raw);
-    }
-    
-    private String format(String s) {
-        if (s == null || s.isEmpty()) return "空";
-        s = s.replace(",", ",\n").replace(":", " : ");
-        return s;
+        return sb.toString();
     }
 }
