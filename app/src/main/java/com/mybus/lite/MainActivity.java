@@ -5,9 +5,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
 import com.mybus.lite.api.MyBusApi;
-import java.io.*;
-import java.net.*;
-import java.util.*;
 
 public class MainActivity extends Activity {
     private EditText cityInput, keywordInput;
@@ -17,13 +14,8 @@ public class MainActivity extends Activity {
     private ProgressBar progress;
 
     private static final String[] MODES = {
-        "1-线路列表",
-        "2-线路评分",
-        "3-失物招领",
-        "4-用户登录",
-        "5-验证码",
-        "6-发布",
-        "7-用户信息"
+        "1-线路列表", "2-线路评分", "3-失物招领", "4-用户登录",
+        "5-验证码", "6-发布", "7-用户信息", "8-微信签名"
     };
     
     @Override
@@ -36,7 +28,7 @@ public class MainActivity extends Activity {
         
         TextView title = new TextView(this);
         title.setText("掌上公交逆向工具\n");
-        title.setTextSize(16);
+        title.setTextSize(18);
         root.addView(title);
         
         cityInput = new EditText(this);
@@ -45,7 +37,7 @@ public class MainActivity extends Activity {
         root.addView(cityInput);
         
         keywordInput = new EditText(this);
-        keywordInput.setHint("关键词(线路名/手机号)");
+        keywordInput.setHint("关键词");
         keywordInput.setText("5路");
         root.addView(keywordInput);
         
@@ -69,11 +61,16 @@ public class MainActivity extends Activity {
         
         searchBtn.setOnClickListener(v -> new Thread(() -> {
             try {
-                runOnUiThread(() -> { progress.setVisibility(View.VISIBLE); searchBtn.setEnabled(false); });
+                runOnUiThread(() -> {
+                    progress.setVisibility(View.VISIBLE);
+                    searchBtn.setEnabled(false);
+                    resultView.setText("");
+                });
                 String city = cityInput.getText().toString().trim();
                 String kw = keywordInput.getText().toString().trim();
                 int mode = modeSelector.getSelectedItemPosition();
                 String result = "";
+                
                 switch (mode) {
                     case 0: result = MyBusApi.getLineList(city); break;
                     case 1: result = MyBusApi.searchBus(kw, 1); break;
@@ -82,10 +79,11 @@ public class MainActivity extends Activity {
                     case 4: result = MyBusApi.sendCode("13800138000"); break;
                     case 5: result = MyBusApi.release(""); break;
                     case 6: result = MyBusApi.getUserInfo(); break;
+                    case 7: result = MyBusApi.wxSign("https://www.mygolbs.com"); break;
                 }
-                final String fr = result;
+                
                 runOnUiThread(() -> {
-                    resultView.setText(fr);
+                    resultView.setText(result);
                     progress.setVisibility(View.GONE);
                     searchBtn.setEnabled(true);
                 });
@@ -96,7 +94,7 @@ public class MainActivity extends Activity {
                     searchBtn.setEnabled(true);
                 });
             }
-        }).start();
+        }).start());
         
         setContentView(root);
     }
