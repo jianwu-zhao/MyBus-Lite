@@ -1,25 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">掌上公交精简版</string>
-    <string name="amap_key">45bf007bbf84b9982e721aa5bd259b1f</string>
-    <string name="search_hint">搜索公交线路、站点</string>
-    <string name="select_city">选择城市</string>
-    <string name="my_location">我的位置</string>
-    <string name="route_plan">路线规划</string>
-    <string name="favorites">收藏</string>
-    <string name="nearby_stations">附近站点</string>
-    <string name="real_time">实时公交</string>
-    <string name="line_direction">方向</string>
-    <string name="next_bus">最近一班</string>
-    <string name="no_data">暂无数据</string>
-    <string name="loading">加载中…</string>
-    <string name="error_network">网络错误，请检查网络连接</string>
-    <string name="error_server">服务器错误，请稍后再试</string>
-    <string name="retry">重试</string>
-    <string name="settings">设置</string>
-    <string name="about">关于</string>
-    <string name="version">版本 1.0.0</string>
-    <string name="api_source_title">数据源</string>
-    <string name="api_source_auto">自动（掌上公交）</string>
-    <string name="api_source_amap">高德地图</string>
+    <string name="app_name">掌上公交</string>
 </resources>
