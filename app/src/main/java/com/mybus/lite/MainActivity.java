@@ -15,7 +15,8 @@ public class MainActivity extends Activity {
 
     private static final String[] MODES = {
         "1-线路列表", "2-线路评分", "3-失物招领", "4-用户登录",
-        "5-验证码", "6-发布", "7-用户信息", "8-微信签名"
+        "5-验证码", "6-发布", "7-用户信息", "8-微信签名",
+        "9-实时到站站点列表", "10-实时到站预测"
     };
     
     @Override
@@ -32,13 +33,13 @@ public class MainActivity extends Activity {
         root.addView(title);
         
         cityInput = new EditText(this);
-        cityInput.setHint("城市代码（02700=武汉）");
-        cityInput.setText("02700");
+        cityInput.setHint("城市代码：02700=武汉，0592=厦门");
+        cityInput.setText("0592");
         root.addView(cityInput);
         
         keywordInput = new EditText(this);
-        keywordInput.setHint("关键词");
-        keywordInput.setText("5路");
+        keywordInput.setHint("线路名；实时预测格式：线路|routeId|方向|站序");
+        keywordInput.setText("91路|161|2|7");
         root.addView(keywordInput);
         
         modeSelector = new Spinner(this);
@@ -80,6 +81,22 @@ public class MainActivity extends Activity {
                     case 5: result = MyBusApi.release(""); break;
                     case 6: result = MyBusApi.getUserInfo(); break;
                     case 7: result = MyBusApi.wxSign("https://www.mygolbs.com"); break;
+                    case 8: {
+                        String routeName = kw.contains("|") ? kw.split("\\|")[0] : kw;
+                        result = MyBusApi.getArriveStations(city, routeName, 1)
+                            + "\n\n--- 反方向 ---\n"
+                            + MyBusApi.getArriveStations(city, routeName, 2);
+                        break;
+                    }
+                    case 9: {
+                        String[] p = kw.split("\\|");
+                        String routeName = p.length > 0 ? p[0] : "91路";
+                        String routeId = p.length > 1 ? p[1] : "161";
+                        int direction = p.length > 2 ? Integer.parseInt(p[2]) : 2;
+                        int stationOrder = p.length > 3 ? Integer.parseInt(p[3]) : 7;
+                        result = MyBusApi.getArriveTime(city, routeName, routeId, direction, stationOrder);
+                        break;
+                    }
                 }
                 
                 runOnUiThread(() -> {

@@ -12,6 +12,7 @@ public class MyBusApi {
     public static final String BASE = "http://quanguo.mygolbs.com:8081";
     public static final String LOSTFOUND = BASE + "/Lostfound";
     public static final String FUZHOU = "http://0591.mygolbs.com/FuZhou";
+    public static final String ARRIVE_TIMES = "https://at.mygolbs.com:38886/ArriveTimes";
     
     // 1. 获取城市代码（原 APP 内部）
     public static String getCityCode() {
@@ -70,6 +71,36 @@ public class MyBusApi {
     public static String sendCode(String phone) throws Exception {
         return post(LOSTFOUND + "/sendVerificationCodeServlet",
             "account=" + URLEncoder.encode(phone, "UTF-8"));
+    }
+
+    // 11. 微信 JS-SDK 签名接口，CMD=204，不是公交查询
+    public static String wxSign(String url) throws Exception {
+        return get("https://wx.mygolbs.com/WxBusServer/ApiData.do",
+            "CMD=204&kkk=58581313&signurl=" + URLEncoder.encode(url, "UTF-8"));
+    }
+
+    // 12. 实时到站：站点列表。routeName 必须双重编码。
+    public static String getArriveStations(String cityCode, String routeName, int direction) throws Exception {
+        String encoded = doubleEncode(routeName);
+        return get(ARRIVE_TIMES + "/getStation",
+            "cityCode=" + URLEncoder.encode(cityCode, "UTF-8")
+            + "&routeName=" + encoded
+            + "&direction=" + direction);
+    }
+
+    // 13. 实时到站：到站预测。routeId 必须来自原 APP 当前线路上下文；H5 示例 0592/91路/161 可用。
+    public static String getArriveTime(String cityCode, String routeName, String routeId, int direction, int stationOrder) throws Exception {
+        String encoded = doubleEncode(routeName);
+        return get(ARRIVE_TIMES + "/Api",
+            "cityCode=" + URLEncoder.encode(cityCode, "UTF-8")
+            + "&routeName=" + encoded
+            + "&routeId=" + URLEncoder.encode(routeId, "UTF-8")
+            + "&direction=" + direction
+            + "&staOrder=" + stationOrder);
+    }
+
+    private static String doubleEncode(String s) throws Exception {
+        return URLEncoder.encode(URLEncoder.encode(s, "UTF-8"), "UTF-8");
     }
     
     private static String post(String url, String data) throws Exception {
