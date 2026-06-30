@@ -14,9 +14,14 @@ public class MainActivity extends Activity {
     private ProgressBar progress;
 
     private static final String[] MODES = {
-        "1-线路列表", "2-线路评分", "3-失物招领", "4-用户登录",
-        "5-验证码", "6-发布", "7-用户信息", "8-微信签名",
-        "9-实时到站站点列表", "10-实时到站预测"
+        "线路列表（全国）",
+        "线路评分（福州）",
+        "失物招领",
+        "微信JS-SDK签名",
+        "实时站点列表（厦门示例91路）",
+        "实时到站预测（厦门示例91路|161|2|7）",
+        "用户登录",
+        "发送验证码"
     };
     
     @Override
@@ -28,26 +33,27 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         
         TextView title = new TextView(this);
-        title.setText("掌上公交逆向工具\n");
+        title.setText("掌上公交真实接口测试\n");
         title.setTextSize(18);
         root.addView(title);
         
         cityInput = new EditText(this);
-        cityInput.setHint("城市代码：02700=武汉，0592=厦门");
+        cityInput.setHint("城市代码（027=武汉 0592=厦门 0591=福州）");
         cityInput.setText("0592");
         root.addView(cityInput);
         
         keywordInput = new EditText(this);
-        keywordInput.setHint("线路名；实时预测格式：线路|routeId|方向|站序");
-        keywordInput.setText("91路|161|2|7");
+        keywordInput.setHint("线路名/参数（如：91路|161|2|7）");
+        keywordInput.setText("91路");
         root.addView(keywordInput);
         
         modeSelector = new Spinner(this);
-        modeSelector.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MODES));
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MODES);
+        modeSelector.setAdapter(adapter);
         root.addView(modeSelector);
         
         searchBtn = new Button(this);
-        searchBtn.setText("查询");
+        searchBtn.setText("查询掌上公交");
         root.addView(searchBtn);
         
         progress = new ProgressBar(this);
@@ -73,30 +79,37 @@ public class MainActivity extends Activity {
                 String result = "";
                 
                 switch (mode) {
-                    case 0: result = MyBusApi.getLineList(city); break;
-                    case 1: result = MyBusApi.searchBus(kw, 1); break;
-                    case 2: result = MyBusApi.getLostList(city, kw, 2); break;
-                    case 3: result = MyBusApi.login("test@test.com", "123456"); break;
-                    case 4: result = MyBusApi.sendCode("13800138000"); break;
-                    case 5: result = MyBusApi.release(""); break;
-                    case 6: result = MyBusApi.getUserInfo(); break;
-                    case 7: result = MyBusApi.wxSign("https://www.mygolbs.com"); break;
-                    case 8: {
-                        String routeName = kw.contains("|") ? kw.split("\\|")[0] : kw;
-                        result = MyBusApi.getArriveStations(city, routeName, 1)
-                            + "\n\n--- 反方向 ---\n"
-                            + MyBusApi.getArriveStations(city, routeName, 2);
+                    case 0:
+                        result = MyBusApi.getLineList(city);
                         break;
-                    }
-                    case 9: {
+                    case 1:
+                        result = MyBusApi.searchBus(kw, 200);
+                        break;
+                    case 2:
+                        result = MyBusApi.getLostList(city, kw, 2);
+                        break;
+                    case 3:
+                        result = MyBusApi.wxSign("https://www.mygolbs.com");
+                        break;
+                    case 4:
+                        result = MyBusApi.getArriveStations(city, kw, 1)
+                            + "\n\n=== 返向 ===\n"
+                            + MyBusApi.getArriveStations(city, kw, 2);
+                        break;
+                    case 5: {
                         String[] p = kw.split("\\|");
-                        String routeName = p.length > 0 ? p[0] : "91路";
-                        String routeId = p.length > 1 ? p[1] : "161";
-                        int direction = p.length > 2 ? Integer.parseInt(p[2]) : 2;
-                        int stationOrder = p.length > 3 ? Integer.parseInt(p[3]) : 7;
-                        result = MyBusApi.getArriveTime(city, routeName, routeId, direction, stationOrder);
+                        String routeName = p[0], routeId = p.length>1?p[1]:"161";
+                        int dir = p.length>2?Integer.parseInt(p[2]):2;
+                        int sta = p.length>3?Integer.parseInt(p[3]):7;
+                        result = MyBusApi.getArriveTime(city, routeName, routeId, dir, sta);
                         break;
                     }
+                    case 6:
+                        result = MyBusApi.login("13800138000", "123456");
+                        break;
+                    case 7:
+                        result = MyBusApi.sendCode("13800138000");
+                        break;
                 }
                 
                 runOnUiThread(() -> {
