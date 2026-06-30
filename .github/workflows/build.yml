@@ -1,10 +1,8 @@
 name: Build APK
-
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,10 +16,13 @@ jobs:
           distribution: temurin
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install Android 34
-        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - name: Install Android 34 platform
+        run: |
+          yes | sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+          echo "ANDROID_HOME=$ANDROID_HOME"
       - name: Build
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: |
+          ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
