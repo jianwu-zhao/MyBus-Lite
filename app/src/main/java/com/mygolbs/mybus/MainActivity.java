@@ -17,7 +17,6 @@ import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
     private static final String BASE = "https://wx.mygolbs.com";
-    private static final String MSG_API = "/MyBusWeChatMessage";
     private static final String BUS_API = "/WxBusServer/ApiData.do";
 
     private EditText cityInput;
@@ -56,7 +55,7 @@ public class MainActivity extends Activity {
         root.addView(lineInput, new LinearLayout.LayoutParams(-1, -2));
 
         searchButton = new Button(this);
-        searchButton.setText("查询掌上公交 API");
+        searchButton.setText("验证 CMD=204 签名接口");
         root.addView(searchButton, new LinearLayout.LayoutParams(-1, -2));
 
         progressBar = new ProgressBar(this);
@@ -66,7 +65,7 @@ public class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         resultView = new TextView(this);
         resultView.setTextSize(12);
-        resultView.setText("已提取 API：\n1) https://wx.mygolbs.com/WxBusServer/\n2) https://wx.mygolbs.com/MyBusWeChatMessage\n\n输入线路后点击查询。");
+        resultView.setText("已验证：CMD=204 是微信 JS-SDK 签名接口，不是公交查询接口。\n\n正确参数：CMD=204&kkk=58581313&signurl=https://www.mygolbs.com/\n\n下一步继续提取真正公交线路 CMD。");
         scroll.addView(resultView, new ScrollView.LayoutParams(-1, -2));
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
@@ -75,26 +74,15 @@ public class MainActivity extends Activity {
     }
 
     private void search() {
-        final String city = cityInput.getText().toString().trim();
-        final String line = lineInput.getText().toString().trim();
-        if (line.length() == 0) {
-            resultView.setText("请输入线路名");
-            return;
-        }
         progressBar.setVisibility(View.VISIBLE);
         searchButton.setEnabled(false);
         resultView.setText("请求中...");
         new Thread(() -> {
             String out;
             try {
-                out = "[接口1 WxBusServer/ApiData.do]\n" + request(buildWxBusUrl(city, line));
+                out = "[已验证接口 WxBusServer/ApiData.do：CMD=204 微信 JS-SDK 签名]\n" + request(buildWxSignUrl());
             } catch (Exception e) {
-                out = "接口1失败: " + e.getMessage();
-            }
-            try {
-                out += "\n\n[接口2 MyBusWeChatMessage]\n" + request(buildMsgUrl(city, line));
-            } catch (Exception e) {
-                out += "\n\n接口2失败: " + e.getMessage();
+                out = "接口失败: " + e.getMessage();
             }
             final String finalOut = out;
             runOnUiThread(() -> {
@@ -105,16 +93,9 @@ public class MainActivity extends Activity {
         }).start();
     }
 
-    private String buildWxBusUrl(String city, String line) throws Exception {
-        return BASE + BUS_API + "?CMD=204&kkk=58581313&city="
-                + URLEncoder.encode(city, "UTF-8")
-                + "&line=" + URLEncoder.encode(line, "UTF-8");
-    }
-
-    private String buildMsgUrl(String city, String line) throws Exception {
-        return BASE + MSG_API + "?CMD=204&kkk=58581313&city="
-                + URLEncoder.encode(city, "UTF-8")
-                + "&line=" + URLEncoder.encode(line, "UTF-8");
+    private String buildWxSignUrl() throws Exception {
+        return BASE + BUS_API + "?CMD=204&kkk=58581313&signurl="
+                + URLEncoder.encode("https://www.mygolbs.com/", "UTF-8");
     }
 
     private String request(String url) throws Exception {
