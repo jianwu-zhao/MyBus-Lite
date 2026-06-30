@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.mygolbs.mybus'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId 'com.mygolbs.mybus'
         minSdk 21
-        targetSdk 34
+        targetSdk 33
         versionCode 2
         versionName '2.0.0'
     }
