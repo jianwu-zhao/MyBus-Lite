@@ -1,4 +1,4 @@
-package com.mygolbs.mybus;
+package com.mybus.lite;
 
 import android.app.Activity;
 import android.os.Bundle;
