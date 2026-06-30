@@ -8,26 +8,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'temurin'
-
+          distribution: temurin
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-
+        uses: android-actions/setup-android@v3
+      - name: Install Android 34
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
       - name: Build
-        run: |
-          ./gradlew assembleDebug --stacktrace
-
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: mybus-apk
+          name: mybus-api-debug-apk
           path: app/build/outputs/apk/debug/*.apk
