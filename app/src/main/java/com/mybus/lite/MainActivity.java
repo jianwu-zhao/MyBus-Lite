@@ -4,9 +4,10 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
+import com.mybus.lite.api.MyBusApi;
 import java.io.*;
 import java.net.*;
-import com.mybus.lite.api.MyBusApi;
+import java.util.*;
 
 public class MainActivity extends Activity {
     private EditText cityInput, keywordInput;
@@ -14,100 +15,77 @@ public class MainActivity extends Activity {
     private Button searchBtn;
     private TextView resultView;
     private ProgressBar progress;
-    private ScrollView scrollView;
-    
-    // 功能模式
+
     private static final String[] MODES = {
-        "查线路列表",
-        "查线路评分",
-        "失物招领",
-        "微信签名",
-        "用户登录"
+        "1-线路列表",
+        "2-线路评分",
+        "3-失物招领",
+        "4-用户登录",
+        "5-验证码",
+        "6-发布",
+        "7-用户信息"
     };
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+        int dp = (int)(12 * getResources().getDisplayMetrics().density + 0.5f);
         LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        int dp = (int)(14 * getResources().getDisplayMetrics().density + 0.5f);
         root.setPadding(dp, dp, dp, dp);
+        root.setOrientation(LinearLayout.VERTICAL);
         
-        // 城市码
+        TextView title = new TextView(this);
+        title.setText("掌上公交逆向工具\n");
+        title.setTextSize(16);
+        root.addView(title);
+        
         cityInput = new EditText(this);
-        cityInput.setHint("城市代码：02700=武汉 0591=福州 02805=简阳");
+        cityInput.setHint("城市代码（02700=武汉）");
         cityInput.setText("02700");
-        root.addView(cityInput, new LinearLayout.LayoutParams(-1, -2));
+        root.addView(cityInput);
         
-        // 关键词
         keywordInput = new EditText(this);
-        keywordInput.setHint("线路/关键词，如:5路/1路/武汉");
+        keywordInput.setHint("关键词(线路名/手机号)");
         keywordInput.setText("5路");
-        root.addView(keywordInput, new LinearLayout.LayoutParams(-1, -2));
+        root.addView(keywordInput);
         
-        // 模式选择
         modeSelector = new Spinner(this);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MODES);
-        modeSelector.setAdapter(adapter);
-        root.addView(modeSelector, new LinearLayout.LayoutParams(-1, -2));
+        modeSelector.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, MODES));
+        root.addView(modeSelector);
         
-        // 查询按钮
         searchBtn = new Button(this);
-        searchBtn.setText("查询掌上公交");
-        searchBtn.setOnClickListener(this::search);
-        root.addView(searchBtn, new LinearLayout.LayoutParams(-1, -2));
+        searchBtn.setText("查询");
+        root.addView(searchBtn);
         
-        // 进度条
         progress = new ProgressBar(this);
         progress.setVisibility(View.GONE);
-        root.addView(progress, new LinearLayout.LayoutParams(-1, -2));
+        root.addView(progress);
         
-        // 结果区域
-        scrollView = new ScrollView(this);
+        ScrollView sv = new ScrollView(this);
         resultView = new TextView(this);
         resultView.setTextSize(12);
-        resultView.setText("首次使用前请确认城市代码\n武汉=02700, 福州=0591, 简阳=02805");
-        scrollView.addView(resultView, new ScrollView.LayoutParams(-1, -2));
-        root.addView(scrollView, new LinearLayout.LayoutParams(-1, 0, 1));
+        sv.addView(resultView, new ScrollView.LayoutParams(-1, -2));
+        root.addView(sv, new LinearLayout.LayoutParams(-1, 0, 1));
         
-        setContentView(root);
-    }
-    
-    private void search(View v) {
-        progress.setVisibility(View.VISIBLE);
-        searchBtn.setEnabled(false);
-        resultView.setText("查询中...\n");
-        
-        new Thread(() -> {
+        searchBtn.setOnClickListener(v -> new Thread(() -> {
             try {
+                runOnUiThread(() -> { progress.setVisibility(View.VISIBLE); searchBtn.setEnabled(false); });
                 String city = cityInput.getText().toString().trim();
-                String keyword = keywordInput.getText().toString().trim();
+                String kw = keywordInput.getText().toString().trim();
                 int mode = modeSelector.getSelectedItemPosition();
                 String result = "";
-                
                 switch (mode) {
-                    case 0: // 查线路列表
-                        result = MyBusApi.lines(city);
-                        result = formatResult(result, keyword);
-                        break;
-                    case 1: // 查线路评分
-                        result = MyBusApi.ranking(city, 50);
-                        break;
-                    case 2: // 失物招领
-                        result = MyBusApi.lostfound(city, keyword, 2);
-                        break;
-                    case 3: // 微信签名
-                        result = MyBusApi.wxSign("https://www.mygolbs.com");
-                        break;
-                    case 4: // 用户登录
-                        result = MyBusApi.userLogin("", "");
-                        break;
+                    case 0: result = MyBusApi.getLineList(city); break;
+                    case 1: result = MyBusApi.searchBus(kw, 1); break;
+                    case 2: result = MyBusApi.getLostList(city, kw, 2); break;
+                    case 3: result = MyBusApi.login("test@test.com", "123456"); break;
+                    case 4: result = MyBusApi.sendCode("13800138000"); break;
+                    case 5: result = MyBusApi.release(""); break;
+                    case 6: result = MyBusApi.getUserInfo(); break;
                 }
-                
-                final String finalResult = result;
+                final String fr = result;
                 runOnUiThread(() -> {
-                    resultView.setText(finalResult);
+                    resultView.setText(fr);
                     progress.setVisibility(View.GONE);
                     searchBtn.setEnabled(true);
                 });
@@ -119,10 +97,7 @@ public class MainActivity extends Activity {
                 });
             }
         }).start();
-    }
-    
-    private String formatResult(String json, String keyword) {
-        if (json == null || json.isEmpty()) return "空结果";
-        return json.replace(",", ",\n").replace("{", "{\n").replace("}", "\n}").replace("[", "[\n").replace("]", "\n]");
+        
+        setContentView(root);
     }
 }
