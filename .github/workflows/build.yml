@@ -3,16 +3,14 @@ name: Build APK
 on:
   push:
     branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -24,22 +22,18 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant execute permission for gradlew
+      - name: Install SDK 30
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-30" "build-tools;30.0.3" 2>/dev/null || true
+
+      - name: Grant permissions
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: MyBus-Lite-v${{ github.run_number }}
+          name: mybus-apk
           path: app/build/outputs/apk/debug/*.apk
-
-      - name: Upload mapping (ProGuard)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: proguard-mapping
-          path: app/build/outputs/mapping/**/*
-          if-no-files-found: ignore
