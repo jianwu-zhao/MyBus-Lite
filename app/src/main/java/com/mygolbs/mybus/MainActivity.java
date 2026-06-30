@@ -11,15 +11,14 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
-    private static final String BASE = "https://wx.mygolbs.com";
-    private static final String BUS_API = "/WxBusServer/ApiData.do";
-
-    private EditText cityInput;
+    private static final String LINE_API = "http://quanguo.mygolbs.com:8081/Lostfound/GetLineServlet";
+    private EditText cityCodeInput;
     private EditText lineInput;
     private TextView resultView;
     private ProgressBar progressBar;
@@ -38,24 +37,24 @@ public class MainActivity extends Activity {
         root.setPadding(pad, pad, pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("掌上公交 API 调试版");
+        title.setText("掌上公交真实 API 调试版");
         title.setTextSize(20);
-        title.setPadding(0, 0, 0, dp(12));
         root.addView(title, new LinearLayout.LayoutParams(-1, -2));
 
-        cityInput = new EditText(this);
-        cityInput.setHint("城市，如 福州");
-        cityInput.setSingleLine(true);
-        cityInput.setText("福州");
-        root.addView(cityInput, new LinearLayout.LayoutParams(-1, -2));
+        cityCodeInput = new EditText(this);
+        cityCodeInput.setHint("城市代码：武汉=02700");
+        cityCodeInput.setSingleLine(true);
+        cityCodeInput.setText("02700");
+        root.addView(cityCodeInput, new LinearLayout.LayoutParams(-1, -2));
 
         lineInput = new EditText(this);
-        lineInput.setHint("线路，如 1路");
+        lineInput.setHint("线路，如 5路");
         lineInput.setSingleLine(true);
+        lineInput.setText("5路");
         root.addView(lineInput, new LinearLayout.LayoutParams(-1, -2));
 
         searchButton = new Button(this);
-        searchButton.setText("验证 CMD=204 签名接口");
+        searchButton.setText("查询武汉线路 JSON");
         root.addView(searchButton, new LinearLayout.LayoutParams(-1, -2));
 
         progressBar = new ProgressBar(this);
@@ -65,7 +64,7 @@ public class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         resultView = new TextView(this);
         resultView.setTextSize(12);
-        resultView.setText("已验证：CMD=204 是微信 JS-SDK 签名接口，不是公交查询接口。\n\n正确参数：CMD=204&kkk=58581313&signurl=https://www.mygolbs.com/\n\n下一步继续提取真正公交线路 CMD。");
+        resultView.setText("已验证真实 JSON 接口：\nPOST " + LINE_API + "\n参数：cityCode=02700\n\n点击查询会过滤 5路。\n注意：MyBusWeChatMessage 返回 HTML，不是公交 JSON。");
         scroll.addView(resultView, new ScrollView.LayoutParams(-1, -2));
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
@@ -74,15 +73,18 @@ public class MainActivity extends Activity {
     }
 
     private void search() {
+        final String cityCode = cityCodeInput.getText().toString().trim();
+        final String keyword = lineInput.getText().toString().trim();
         progressBar.setVisibility(View.VISIBLE);
         searchButton.setEnabled(false);
         resultView.setText("请求中...");
         new Thread(() -> {
             String out;
             try {
-                out = "[已验证接口 WxBusServer/ApiData.do：CMD=204 微信 JS-SDK 签名]\n" + request(buildWxSignUrl());
+                String body = requestLines(cityCode);
+                out = filterLines(body, keyword);
             } catch (Exception e) {
-                out = "接口失败: " + e.getMessage();
+                out = "请求失败: " + e.getMessage();
             }
             final String finalOut = out;
             runOnUiThread(() -> {
@@ -93,17 +95,19 @@ public class MainActivity extends Activity {
         }).start();
     }
 
-    private String buildWxSignUrl() throws Exception {
-        return BASE + BUS_API + "?CMD=204&kkk=58581313&signurl="
-                + URLEncoder.encode("https://www.mygolbs.com/", "UTF-8");
-    }
-
-    private String request(String url) throws Exception {
-        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
-        c.setConnectTimeout(8000);
-        c.setReadTimeout(8000);
-        c.setRequestMethod("GET");
+    private String requestLines(String cityCode) throws Exception {
+        String post = "cityCode=" + URLEncoder.encode(cityCode, "UTF-8");
+        HttpURLConnection c = (HttpURLConnection) new URL(LINE_API).openConnection();
+        c.setConnectTimeout(10000);
+        c.setReadTimeout(15000);
+        c.setRequestMethod("POST");
+        c.setDoOutput(true);
         c.setRequestProperty("User-Agent", "Mozilla/5.0 MyBus-Lite");
+        c.setRequestProperty("Referer", "http://quanguo.mygolbs.com:8081/Lostfound/");
+        c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        OutputStream os = c.getOutputStream();
+        os.write(post.getBytes("UTF-8"));
+        os.close();
         int code = c.getResponseCode();
         BufferedReader r = new BufferedReader(new InputStreamReader(
                 code >= 200 && code < 400 ? c.getInputStream() : c.getErrorStream(), "UTF-8"));
@@ -112,11 +116,24 @@ public class MainActivity extends Activity {
         while ((line = r.readLine()) != null) sb.append(line).append('\n');
         r.close();
         c.disconnect();
-        return "URL: " + url + "\nHTTP: " + code + "\n" + pretty(sb.toString());
+        return "URL: " + LINE_API + "\nPOST: " + post + "\nHTTP: " + code + "\n\n" + sb;
+    }
+
+    private String filterLines(String raw, String keyword) {
+        if (keyword == null || keyword.length() == 0) return pretty(raw);
+        StringBuilder out = new StringBuilder();
+        out.append("关键词：").append(keyword).append("\n\n");
+        String[] parts = raw.replace("},{", "}\n{").split("\n");
+        for (String part : parts) {
+            if (part.contains(keyword)) out.append(part).append("\n\n");
+        }
+        if (out.toString().trim().equals("关键词：" + keyword)) {
+            out.append("未过滤到，下面显示原始返回：\n").append(pretty(raw));
+        }
+        return out.toString();
     }
 
     private String pretty(String s) {
-        if (s == null || s.length() == 0) return "<empty>";
         return s.replace("},{", "},\n{").replace(",\"", ",\n\"");
     }
 
