@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.mygolbs.mybus'
-    compileSdk 34
+    compileSdk 30
 
     defaultConfig {
         applicationId 'com.mygolbs.mybus'
         minSdk 21
-        targetSdk 34
+        targetSdk 30
         versionCode 1
         versionName '1.0.0'
     }
@@ -37,7 +37,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.appcompat:appcompat:1.5.0'
 }
