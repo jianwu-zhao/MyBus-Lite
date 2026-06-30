@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- LSPosed 模块作用域：只 hook 掌上公交 -->
-    <string-array name="xposed_scope">
-        <item>com.mygolbs.mybus</item>
-    </string-array>
-</resources>

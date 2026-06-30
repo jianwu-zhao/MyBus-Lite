@@ -12,3 +12,7 @@
 *.aab
 *.keystore
 *.jks
+
+# compliance: do not commit Xposed/VIP modules
+xposed-adblock/
+vip-module/
