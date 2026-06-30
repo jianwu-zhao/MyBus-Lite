@@ -1,14 +1,15 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
+plugins {
+    id 'com.android.application' version '8.2.2' apply false
+}
 
 android {
     namespace 'com.mygolbs.mybus'
-    compileSdk 30
+    compileSdk 34
 
     defaultConfig {
         applicationId 'com.mygolbs.mybus'
         minSdk 21
-        targetSdk 30
+        targetSdk 34
         versionCode 1
         versionName '1.0.0'
     }
@@ -35,5 +36,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 }
