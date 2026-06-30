@@ -12,12 +12,16 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
-      - name: Install Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Platform
         run: |
-          sdkmanager --install "platforms;android-33" "build-tools;33.0.2"
-          echo "ANDROID_HOME=$ANDROID_HOME"
+          sdkmanager --install "platforms;android-33" || true
+          sdkmanager --install "build-tools;33.0.2" || true
+          echo $ANDROID_HOME
+          ls $ANDROID_HOME/platforms/
       - name: Build
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: mybus-api-debug-apk
