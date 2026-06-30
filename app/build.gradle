@@ -1,15 +1,13 @@
 plugins {
-    id 'com.android.application'
+    id('com.android.application')
 }
-
 android {
     namespace 'com.mybus.lite'
-    compileSdk 34
-
+    compileSdk 33
     defaultConfig {
         applicationId 'com.mybus.lite'
         minSdk 21
-        targetSdk 34
+        targetSdk 33
         versionCode 3
         versionName '1.3'
     }
